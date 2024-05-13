@@ -1,25 +1,67 @@
-const gsmDataHandler = (request, h) => {
+const gsmDataBase = require(`./gsmDatabase`);
+const { handleFailure } = require("./locationHandler");
+const handlerStatus = require(`./status`);
+
+const gsmDataReceiveHandler = (request, h) => {
     try {
-        const { data } = request.payload;
+        const { gsmID, lv1, lv2, lv3, lv4 } = request.payload;
 
-        // Proses data dari modul GSM
-        console.log('Data yang diterima dari modul GSM:', data);
+        const time = new Date().toString();
 
+        const gsmData = {
+            gsmID, lv1, lv2, lv3, lv4, time,
+        }
+
+        gsmDataBase.push(gsmData);
+
+        //Kirim status handler ke database
+        const statusMSG = 'Data from GSM module successfully received and processed';
+        const gsmStatus = {
+            statusMSG, time,
+        }
+        handlerStatus.push(gsmStatus);
+
+        //Response
         const response = h.response({
             status: 'success',
-            message: 'Data from GSM module successfully received and processed',
+            message: statusMSG,
         });
         response.code(200);
         return response;
     } catch (error) {
-        const response = h.response({
-            status: 'fail',
-            message: 'Failed to process data from GSM module',
-            error: error.message,
-        });
-        response.code(500);
-        return response;
+        //Kirim status handler ke database
+        handleFailure("Failed to receive data from GSM module", error);
     }
 };
 
-module.exports = { gsmDataHandler };
+const gsmDataSendHandler = (request, h) => {
+    try {
+        //Kirim status handler ke database
+        const statusMSG = 'Data from GSM module successfully send';
+        const time = new Date().toString();
+
+        const gsmStatus = {
+            statusMSG, time,
+        }
+        handlerStatus.push(gsmStatus);
+
+        //Response
+        const response = h.response({
+            status: 'success',
+            message: statusMSG,
+            data: {
+                gsmDataBase,
+            },
+        });
+        response.code(200);
+        return response;
+    } catch (error) {
+        //Kirim status handler ke database
+        handleFailure("Failed to send data from GSM module", error);
+    }
+};
+
+module.exports = { 
+    gsmDataReceiveHandler,
+    gsmDataSendHandler, 
+};
