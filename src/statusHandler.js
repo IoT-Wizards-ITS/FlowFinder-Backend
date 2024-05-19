@@ -1,15 +1,13 @@
-const handlerStatus = require(`./status`);
+const handlerStatus = require('./status');
 
-const statusHandler = (request, h) => {
-    const response = h.response({
+const statusHandler = (req, res) => {
+    res.status(200).json({
         status: 'success',
-        message: 'Status data succesfully displayed',
+        message: 'Status data successfully displayed',
         data: {
             handlerStatus,
         },
     });
-    response.code(200);
-    return response;
 };
 
 module.exports = statusHandler;

@@ -1,147 +1,132 @@
-const locationDataBase = require(`./locationDataBase`);
-const placeDataBase = require(`./placeDataBase`);
+const locationDataBase = require('./locationDataBase');
+const placeDataBase = require('./placeDataBase');
 const { v4: uuidv4 } = require('uuid');
+const handlerStatus = require('./status');
 
-const locationReceiveHandler = (request, h) => {
-    try{
-        const { Loc_latitude, loc_longitude, loc_address, loc_city } = request.payload;
+const locationReceiveHandler = (req, res) => {
+    try {
+        const { Loc_latitude, loc_longitude, loc_address, loc_city } = req.body;
 
         const locID = uuidv4().slice(0, 16);
 
         const locData = {
             locID, Loc_latitude, loc_longitude, loc_address, loc_city,
-        }
+        };
 
         locationDataBase.push(locData);
 
-        //Kirim status handler ke database
+        // Send status handler to the database
         const statusMSG = 'Location data successfully received';
         const time = new Date().toString();
 
         const gsmStatus = {
             statusMSG, time,
-        }
+        };
         handlerStatus.push(gsmStatus);
 
-        //Response
-        const response = h.response({
+        // Response
+        res.status(200).json({
             status: 'success',
             message: statusMSG,
         });
-        response.code(200);
-        return response;
     } catch (error) {
-        //Kirim status handler ke database
-        handleFailure("Failed to receive location data", error);
+        // Send status handler to the database
+        handleFailure('Failed to receive location data', error, res);
     }
 };
 
-const locationSendHandler = (request, h) => {
+const locationSendHandler = (req, res) => {
     try {
-        //Kirim status handler ke database
-        const statusMSG = 'Location data succesfully send';
+        // Send status handler to the database
+        const statusMSG = 'Location data successfully sent';
         const time = new Date().toString();
 
         const gsmStatus = {
             statusMSG, time,
-        }
+        };
         handlerStatus.push(gsmStatus);
 
-        //Response
-        const response = h.response({
+        // Response
+        res.status(200).json({
             status: 'success',
             message: statusMSG,
-            data: {
-                locationDataBase,
-            },
+            data: locationDataBase,
         });
-        response.code(200);
-        return response;
     } catch (error) {
-        //Kirim status handler ke database
-        handleFailure("Failed to send location data", error);
+        // Send status handler to the database
+        handleFailure('Failed to send location data', error, res);
     }
 };
 
-const placeReceiveHandler = (request, h) => {
+const placeReceiveHandler = (req, res) => {
     try {
-        const { name, category } = request.payload;
+        const { name, category } = req.body;
 
         const placeID = uuidv4().slice(0, 16);
 
         const placeData = {
             placeID, name, category,
-        }
-        
+        };
+
         placeDataBase.push(placeData);
-        
-        //Kirim status handler ke database
-        const statusMSG = 'Place data succesfully received';
+
+        // Send status handler to the database
+        const statusMSG = 'Place data successfully received';
         const time = new Date().toString();
 
         const gsmStatus = {
             statusMSG, time,
-        }
+        };
         handlerStatus.push(gsmStatus);
 
-        //Response
-        const response = h.response({
+        // Response
+        res.status(200).json({
             status: 'success',
             message: statusMSG,
-            data: {
-                locationDataBase,
-            },
+            data: placeDataBase,
         });
-        response.code(200);
-        return response;
     } catch (error) {
-        //Kirim status handler ke database
-        handleFailure("Failed to receive place data", error);
+        // Send status handler to the database
+        handleFailure('Failed to receive place data', error, res);
     }
 };
 
-const placeSendHandler = (request, h) => {
+const placeSendHandler = (req, res) => {
     try {
-        //Kirim status handler ke database
-        const statusMSG = 'Place data succesfully send';
+        // Send status handler to the database
+        const statusMSG = 'Place data successfully sent';
         const time = new Date().toString();
 
         const gsmStatus = {
             statusMSG, time,
-        }
+        };
         handlerStatus.push(gsmStatus);
 
-        //Response
-        const response = h.response({
+        // Response
+        res.status(200).json({
             status: 'success',
-            message: 'Place data succesfully send',
-            data: {
-                locationDataBase,
-            },
+            message: statusMSG,
+            data: placeDataBase,
         });
-        response.code(200);
-        return response;
     } catch (error) {
-        //Kirim status handler ke database
-        handleFailure("Failed to send place data", error);
+        // Send status handler to the database
+        handleFailure('Failed to send place data', error, res);
     }
-}
+};
 
-const handleFailure = (statusMSG, error) => {
-    // Kirim status handler ke database
+const handleFailure = (statusMSG, error, res) => {
+    // Send status handler to the database
     const time = new Date().toString();
 
     const statusData = { statusMSG, time };
     handlerStatus.push(statusData);
 
     // Response
-    const response = h.response({
+    res.status(500).json({
         status: 'fail',
         message: statusMSG,
         error: error.message,
     });
-    response.code(404);
-    return response;
 };
 
 module.exports = {
@@ -149,5 +134,4 @@ module.exports = {
     locationSendHandler,
     placeReceiveHandler,
     placeSendHandler,
-    handleFailure,
-}
+};
