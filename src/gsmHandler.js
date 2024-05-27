@@ -6,7 +6,7 @@ const gsmDataReceiveHandler = (req, res) => {
     try {
         const { rawData } = req.body;
         const parsedData = parseBinaryData(rawData);
-        const time = new Date().toString();
+        const time = getGMT7Date().toString();
 
         const gsmData = {
             parsedData, time,
@@ -40,7 +40,7 @@ const gsmDataSendHandler = (req, res) => {
     try {
         //Kirim status handler ke database
         const statusMSG = 'Data from GSM module successfully sent';
-        const time = new Date().toString();
+        const time = getGMT7Date().toString();
 
         const gsmStatus = {
             statusMSG,
@@ -83,7 +83,15 @@ function parseBinaryData(binaryData) {
     };
 
     return result;
-}
+};
+
+function getGMT7Date() {
+    const date = new Date();
+    const utcOffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
+    const gmt7Offset = 7 * 60 * 60000; // GMT+7 offset in milliseconds
+    const gmt7Date = new Date(date.getTime() + utcOffset + gmt7Offset);
+    return gmt7Date;
+};
 
 module.exports = { 
     gsmDataReceiveHandler,

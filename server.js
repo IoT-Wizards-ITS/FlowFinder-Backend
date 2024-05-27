@@ -1,29 +1,27 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-//const admin = require('firebase-admin');
+//require('@google-cloud/debug-agent').start();
+
+const Hapi = require('@hapi/hapi');
 const routes = require('./src/routes');
+//const admin = require('firebase-admin');
 //const serviceAccountKey = require('./src/serviceAccountKey.json');
 
-const app = express();
+const init = async () => {
+    const server = Hapi.server({
+        port: 8000,
+        host: 'localhost',
+    });
 
-/* Initialize Firebase Admin SDK
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccountKey),
-    // Add your Firebase database URL if needed
-    databaseURL: "https://protel-e376b-default-rtdb.asia-southeast1.firebasedatabase.app"
-});*/
+    // Inisialisasi Firebase Admin SDK
+    /*admin.initializeApp({
+        credential: admin.credential.cert(serviceAccountKey),
+        // tambahkan konfigurasi database URL Firebase Anda di sini jika diperlukan
+        databaseURL: "https://protel-e376b-default-rtdb.asia-southeast1.firebasedatabase.app"
+    });*/
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+    server.route(routes);
 
-app.use(routes);
+    await server.start();
+    console.log(`Server running at ${server.info.uri}`);
+};
 
-app.get("/", (req, res) => {
-    console.log("Response success");
-    res.send("Response Success!");
-});
-
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-    console.log("Server is up and listening on " + "http://localhost:" + PORT);
-});
+init();

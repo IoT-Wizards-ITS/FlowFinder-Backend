@@ -4,14 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node ./server.js"
+    "start": "node ./app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.19.2",
-    "firebase-admin": "^12.1.0",
-    "firebase-functions": "^5.0.1"
+    "@google-cloud/debug-agent": "^9.0.1",
+    "@google-cloud/firestore": "^7.7.0",
+    "@hapi/hapi": "^21.3.9",
+    "firebase-functions": "^5.0.1",
+    "moment-timezone": "^0.5.45",
+    "mongoose": "^8.4.0"
   }
 }
