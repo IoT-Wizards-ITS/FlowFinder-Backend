@@ -2,8 +2,9 @@ const locationDataBase = require('./locationDataBase');
 const placeDataBase = require('./placeDataBase');
 const { v4: uuidv4 } = require('uuid');
 const handlerStatus = require('./status');
+const { getGMT7Date } = require('./gsmHandler');
 
-const locationReceiveHandler = (req, res) => {
+async function locationReceiveHandler (req, res) {
     try {
         const { Loc_latitude, loc_longitude, loc_address, loc_city } = req.body;
 
@@ -17,12 +18,13 @@ const locationReceiveHandler = (req, res) => {
 
         // Send status handler to the database
         const statusMSG = 'Location data successfully received';
-        const time = new Date().toString();
+        const time = getGMT7Date().toString();
+        const statusId = crypto.randomUUID();
 
         const gsmStatus = {
             statusMSG, time,
         };
-        handlerStatus.push(gsmStatus);
+        await storeDataStatus(statusId, gsmStatus);
 
         // Response
         res.status(200).json({
@@ -35,16 +37,17 @@ const locationReceiveHandler = (req, res) => {
     }
 };
 
-const locationSendHandler = (req, res) => {
+async function locationSendHandler (req, res) {
     try {
         // Send status handler to the database
         const statusMSG = 'Location data successfully sent';
         const time = new Date().toString();
+        const statusId = crypto.randomUUID();
 
         const gsmStatus = {
             statusMSG, time,
         };
-        handlerStatus.push(gsmStatus);
+        await storeDataStatus(statusId, gsmStatus);
 
         // Response
         res.status(200).json({
@@ -116,10 +119,11 @@ const placeSendHandler = (req, res) => {
 
 const handleFailure = (statusMSG, error, res) => {
     // Send status handler to the database
-    const time = new Date().toString();
+    const time = getGMT7Date().toString();
+    const statusId = crypto.randomUUID();
 
     const statusData = { statusMSG, time };
-    handlerStatus.push(statusData);
+    storeDataStatus(statusId, statusData);
 
     // Response
     res.status(500).json({

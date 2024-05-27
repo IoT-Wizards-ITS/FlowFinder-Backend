@@ -1,24 +1,27 @@
-const gsmDataBase = require(`./gsmDatabase`);
 const { handleFailure } = require("./locationHandler");
-const handlerStatus = require(`./status`);
+const { storeDataSensor, storeDataStatus } = require("./db/storeData");
+const crypto = require('crypto');
+const { getLatestSensorData } = require("./db/getData");
 
-const gsmDataReceiveHandler = (req, res) => {
+async function gsmDataReceiveHandler(req, res) {
     try {
         const { rawData } = req.body;
         const parsedData = parseBinaryData(rawData);
         const time = getGMT7Date().toString();
+        const gsmId = crypto.randomUUID();
 
         const gsmData = {
             parsedData, time,
         }
-        gsmDataBase.push(gsmData);
+        await storeDataSensor(gsmId, gsmData);
 
         //Kirim status handler ke database
         const statusMSG = 'Data from GSM module successfully received and processed';
+        const statusId = crypto.randomUUID();
         const gsmStatus = {
             statusMSG, time,
         }
-        handlerStatus.push(gsmStatus);
+        await storeDataStatus(statusId, gsmStatus);
 
         //Response
         res.status(200).json({
@@ -36,25 +39,27 @@ const gsmDataReceiveHandler = (req, res) => {
     }
 };
 
-const gsmDataSendHandler = (req, res) => {
+async function gsmDataSendHandler(req, res) {
     try {
         //Kirim status handler ke database
         const statusMSG = 'Data from GSM module successfully sent';
         const time = getGMT7Date().toString();
+        const statusId = crypto.randomUUID();
 
         const gsmStatus = {
             statusMSG,
             time,
         }
-        handlerStatus.push(gsmStatus);
+        await storeDataStatus(statusId, gsmStatus);
 
         //Response
-        const gsmLatestData = gsmDataBase[gsmDataBase.length - 1];
+        const gsmLatestData = await getLatestSensorData(1);
         res.status(200).json({
             status: 'success',
             message: statusMSG,
             data: {
-                gsmLatestData,
+                parsedData: gsmLatestData.map(item => item.parsedData),
+                time: gsmLatestData.map(item=>item.time)
             },
         });
     } catch (error) {
@@ -95,5 +100,6 @@ function getGMT7Date() {
 
 module.exports = { 
     gsmDataReceiveHandler,
-    gsmDataSendHandler, 
+    gsmDataSendHandler,
+    getGMT7Date,
 };
