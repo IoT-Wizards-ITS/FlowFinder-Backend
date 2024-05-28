@@ -1,5 +1,3 @@
-const handlerStatus = require('./status');
-
 const statusHandler = (req, res) => {
     res.status(200).json({
         status: 'success',

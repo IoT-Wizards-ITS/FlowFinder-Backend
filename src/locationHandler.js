@@ -1,7 +1,5 @@
-const locationDataBase = require('./locationDataBase');
 const placeDataBase = require('./placeDataBase');
 const { v4: uuidv4 } = require('uuid');
-const handlerStatus = require('./status');
 const { getGMT7Date } = require('./gsmHandler');
 const { storeDataLocation } = require('./db/storeData');
 
