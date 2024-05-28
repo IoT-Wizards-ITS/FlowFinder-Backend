@@ -3,18 +3,20 @@ const placeDataBase = require('./placeDataBase');
 const { v4: uuidv4 } = require('uuid');
 const handlerStatus = require('./status');
 const { getGMT7Date } = require('./gsmHandler');
+const { storeDataLocation } = require('./db/storeData');
 
 async function locationReceiveHandler (req, res) {
     try {
         const { Loc_latitude, loc_longitude, loc_address, loc_city } = req.body;
 
         const locID = uuidv4().slice(0, 16);
+        const locIdDb = crypto.randomUUID();
 
         const locData = {
             locID, Loc_latitude, loc_longitude, loc_address, loc_city,
         };
 
-        locationDataBase.push(locData);
+        await storeDataLocation(locIdDb, locData);
 
         // Send status handler to the database
         const statusMSG = 'Location data successfully received';

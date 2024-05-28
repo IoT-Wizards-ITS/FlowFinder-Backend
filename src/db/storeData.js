@@ -17,8 +17,18 @@ async function storeDataStatus(id, data) {
   const predictCollection = db.collection('status-data');
   return predictCollection.doc(id).set(data);
 }
+
+async function storeDataLocation(id, data) {
+  const db = new Firestore({
+    databaseId: 'flowfinder-db'
+  });
  
+  const predictCollection = db.collection('location-data');
+  return predictCollection.doc(id).set(data);
+}
+
 module.exports = { 
   storeDataSensor,
-  storeDataStatus 
+  storeDataStatus,
+  storeDataLocation,
 };
