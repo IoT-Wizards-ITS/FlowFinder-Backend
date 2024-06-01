@@ -6,7 +6,7 @@ const { getLatestSensorData } = require("./db/getData");
 async function gsmDataReceiveHandler(req, res) {
     try {
         const { rawData } = req.body;
-        const parsedData = parseBinaryData(rawData);
+        const parsedData = parseRawData(rawData);
         const time = getGMT7Date().toString();
         const gsmId = crypto.randomUUID();
 
@@ -74,21 +74,27 @@ async function gsmDataSendHandler(req, res) {
 };
 
 //fungsi
-function parseBinaryData(binaryData) {
-    // Pisahkan 2 digit pertama sebagai ID dan 2 digit terakhir sebagai level
-    const id = binaryData.slice(0, 2);
-    const level = binaryData.slice(2);
+function parseRawData(rawData) {
+    // Convert rawData to a string to handle cases where it's a number
+    const rawDataStr = rawData.toString();
 
-    // Konversi level dari biner ke desimal
-    const levelDecimal = parseInt(level, 2);
+    // Validation: Ensure the format is correct
+    const isValidFormat = /^[0-9]{3}[0-4]$/.test(rawDataStr);
+    if (!isValidFormat) {
+        throw new Error("Invalid input format. The input should be exactly 4 digits long with the first 3 digits as random numbers and the last digit in the range 0-4.");
+    }
+
+    const id = parseInt(rawDataStr.slice(0, 3), 10);
+    const level = parseInt(rawDataStr.slice(-1), 10);
 
     const result = {
         id,
-        level: levelDecimal + 1
+        level
     };
 
     return result;
-};
+}
+
 
 function getGMT7Date() {
     const date = new Date();
@@ -102,4 +108,5 @@ module.exports = {
     gsmDataReceiveHandler,
     gsmDataSendHandler,
     getGMT7Date,
+    parseRawData,
 };
