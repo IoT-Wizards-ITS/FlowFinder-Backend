@@ -1,30 +1,19 @@
-const { Firestore } = require('@google-cloud/firestore');
+const db = require("./initializeDB");
  
-async function storeDataSensor(id, data) {
-  const db = new Firestore({
-    databaseId: 'flowfinder-db'
-  });
- 
-  const predictCollection = db.collection('sensor-data');
-  return predictCollection.doc(id).set(data);
+async function storeDataSensor(gsmId, historyId, data) {
+  const sensorDataCollection = db.collection('sensor-data').doc(gsmId);
+  const sensorDataHistory = sensorDataCollection.collection('sensor-history');
+  await sensorDataHistory.doc(historyId).set(data);
 }
 
 async function storeDataStatus(id, data) {
-  const db = new Firestore({
-    databaseId: 'flowfinder-db'
-  });
- 
-  const predictCollection = db.collection('status-data');
-  return predictCollection.doc(id).set(data);
+  const sensorDataCollection = db.collection('status-data');
+  return sensorDataCollection.doc(id).set(data);
 }
 
 async function storeDataLocation(id, data) {
-  const db = new Firestore({
-    databaseId: 'flowfinder-db'
-  });
- 
-  const predictCollection = db.collection('location-data');
-  return predictCollection.doc(id).set(data);
+  const sensorDataCollection = db.collection('location-data');
+  return sensorDataCollection.doc(id).set(data);
 }
 
 module.exports = { 

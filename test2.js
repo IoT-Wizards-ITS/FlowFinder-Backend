@@ -1,10 +1,9 @@
-const { Firestore } = require('@google-cloud/firestore');
-const db = require('./initializeDB');
+const db = require("./src/db/initializeDB");
 
-async function getLatestSensorData() {
-  const sensorsSnapshot = await db.collection('sensor-data').get();
-
+async function getLatestParsedData() {
   try {
+    const sensorsSnapshot = await db.collection('sensor-data').get();
+
     if (sensorsSnapshot.empty) {
       console.log('No sensor documents found.');
       return { data: { parsedData: [] } };
@@ -43,40 +42,5 @@ async function getLatestSensorData() {
   }
 }
 
-async function getLatestStatusData(limitCount = 1) {
-  const db = new Firestore({
-    databaseId: 'flowfinder-db'
-  });
+getLatestParsedData()
 
-  const predictCollection = db.collection('status-data');
-
-  try {
-    const querySnapshot = await predictCollection
-      .orderBy('time', 'desc') 
-      .limit(limitCount)       
-      .get();
-
-    if (querySnapshot.empty) {
-      console.log('No matching documents.');
-      return [];
-    } 
-
-    const latestData = [];
-    querySnapshot.forEach(doc => {
-      latestData.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-
-    return latestData;
-  } catch (error) {
-    console.error('Error getting documents: ', error);
-    throw new Error('Failed to get latest data from Firestore');
-  }
-}
-
-module.exports ={
-  getLatestSensorData,
-  getLatestStatusData
-};

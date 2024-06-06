@@ -7,8 +7,9 @@ async function gsmDataReceiveHandler(req, res) {
     try {
         const { rawData } = req.body;
         const parsedData = parseRawData(rawData);
+        const gsmId = parsedData.id.toString();
+        const historyId = crypto.randomUUID();
         const time = getGMT7Date();
-        const gsmId = crypto.randomUUID();
 
         const gsmData = {
             parsedData, time,
@@ -21,7 +22,7 @@ async function gsmDataReceiveHandler(req, res) {
         const gsmStatus = {
             statusMSG, time,
         }
-        await storeDataStatus(statusId, gsmStatus);
+        await storeDataStatus(statusId, historyId, gsmStatus);
 
         //Response
         res.status(200).json({
@@ -53,13 +54,12 @@ async function gsmDataSendHandler(req, res) {
         await storeDataStatus(statusId, gsmStatus);
 
         //Response
-        const gsmLatestData = await getLatestSensorData(1);
+        const gsmLatestData = await getLatestSensorData();
         res.status(200).json({
             status: 'success',
             message: statusMSG,
             data: {
-                parsedData: gsmLatestData.map(item => item.parsedData),
-                time: gsmLatestData.map(item=>item.time)
+                parsedData: gsmLatestData.map(item => item.parsedData)
             },
         });
     } catch (error) {
