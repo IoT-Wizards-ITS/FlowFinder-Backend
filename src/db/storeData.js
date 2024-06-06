@@ -8,16 +8,29 @@ async function storeDataSensor(gsmId, historyId, data) {
 
 async function storeDataStatus(id, data) {
   const sensorDataCollection = db.collection('status-data');
-  return sensorDataCollection.doc(id).set(data);
+  await sensorDataCollection.doc(id).set(data);
 }
 
 async function storeDataLocation(id, data) {
   const sensorDataCollection = db.collection('location-data');
-  return sensorDataCollection.doc(id).set(data);
+  await sensorDataCollection.doc(id).set(data);
+}
+
+async function storeDataZero(gsmId, historyId, data) {
+  const sensorDataCollection = db.collection('level-zero').doc(gsmId);
+  const sensorDataHistory = sensorDataCollection.collection('sensor-history');
+  await sensorDataHistory.doc(historyId).set(data);
+}
+
+async function storeDataFloodTimeHistory(ID, data) {
+  const floodTimeCollection = db.collection('floodtime-history');
+  await floodTimeCollection.doc(ID).set(data);
 }
 
 module.exports = { 
   storeDataSensor,
   storeDataStatus,
   storeDataLocation,
+  storeDataZero,
+  storeDataFloodTimeHistory,
 };

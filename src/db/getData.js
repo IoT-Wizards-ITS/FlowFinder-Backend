@@ -35,7 +35,7 @@ async function getLatestSensorData() {
         parsedData: filteredResults
     };
     
-    console.log('Latest Parsed Data:', JSON.stringify(response, null, 2));
+    //console.log('Latest Parsed Data:', JSON.stringify(response, null, 2));
     return response;
   } catch (error) {
     //console.error('Error retrieving latest parsed data:', error);
@@ -44,14 +44,10 @@ async function getLatestSensorData() {
 }
 
 async function getLatestStatusData(limitCount = 1) {
-  const db = new Firestore({
-    databaseId: 'flowfinder-db'
-  });
-
-  const predictCollection = db.collection('status-data');
+  const Collection = db.collection('status-data');
 
   try {
-    const querySnapshot = await predictCollection
+    const querySnapshot = await Collection
       .orderBy('time', 'desc') 
       .limit(limitCount)       
       .get();

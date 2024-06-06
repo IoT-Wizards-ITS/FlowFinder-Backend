@@ -1,7 +1,8 @@
 const { handleFailure } = require("./locationHandler");
-const { storeDataSensor, storeDataStatus } = require("./db/storeData");
+const { storeDataSensor, storeDataStatus, storeDataZero } = require("./db/storeData");
 const crypto = require('crypto');
 const { getLatestSensorData } = require("./db/getData");
+const calculateAndFormatTimeDifference = require("./timeCountHandler");
 
 async function gsmDataReceiveHandler(req, res) {
     try {
@@ -9,12 +10,19 @@ async function gsmDataReceiveHandler(req, res) {
         const parsedData = parseRawData(rawData);
         const gsmId = parsedData.id.toString();
         const historyId = crypto.randomUUID();
-        const time = getGMT7Date();
+        const time = getGMT7Date(1);
 
         const gsmData = {
             parsedData, time,
         }
         await storeDataSensor(gsmId, historyId, gsmData);
+
+        const timeStamp = { time };
+        if(parsedData.level.toString() === "0") {
+            await storeDataZero(gsmId, historyId, timeStamp);
+        }
+
+        await calculateAndFormatTimeDifference(historyId);
 
         //Kirim status handler ke database
         const statusMSG = 'Data from GSM module successfully received and processed';
@@ -44,7 +52,7 @@ async function gsmDataSendHandler(req, res) {
     try {
         //Kirim status handler ke database
         const statusMSG = 'Data from GSM module successfully sent';
-        const time = getGMT7Date();
+        const time = getGMT7Date(1);
         const statusId = crypto.randomUUID();
 
         const gsmStatus = {
@@ -96,7 +104,7 @@ function parseRawData(rawData) {
 }
 
 
-function getGMT7Date() {
+function getGMT7Date(opt) {
     const date = new Date();
     const utcOffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
     const gmt7Offset = 7 * 60 * 60000; // GMT+7 offset in milliseconds
@@ -111,10 +119,17 @@ function getGMT7Date() {
         second: '2-digit',
         hour12: false
     };
-    
+
+    const isoGmt7Date = gmt7Date.toISOString();
     const formattedDate = gmt7Date.toLocaleString('en-GB', options).replace(',', '');
-    
-    return formattedDate;
+
+    if(opt === 1) {
+        return isoGmt7Date;
+    }
+
+    if (opt === 2) {
+        return formattedDate;
+    }
 }
 
 module.exports = { 
