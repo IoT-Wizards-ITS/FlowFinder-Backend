@@ -6,7 +6,7 @@ async function getLatestSensorData() {
 
   try {
     if (sensorsSnapshot.empty) {
-      console.log('No sensor documents found.');
+      //console.log('No sensor documents found.');
       return { data: { parsedData: [] } };
     }
 
@@ -20,7 +20,7 @@ async function getLatestSensorData() {
         .get();
 
       if (sensorHistorySnapshot.empty) {
-        console.log(`No history found for sensor ${sensorId}`);
+        //console.log(`No history found for sensor ${sensorId}`);
         return null;
       }
 
@@ -38,7 +38,7 @@ async function getLatestSensorData() {
     console.log('Latest Parsed Data:', JSON.stringify(response, null, 2));
     return response;
   } catch (error) {
-    console.error('Error retrieving latest parsed data:', error);
+    //console.error('Error retrieving latest parsed data:', error);
     return { data: { parsedData: [] }, error: error.message };
   }
 }
@@ -57,7 +57,7 @@ async function getLatestStatusData(limitCount = 1) {
       .get();
 
     if (querySnapshot.empty) {
-      console.log('No matching documents.');
+      //console.log('No matching documents.');
       return [];
     } 
 
@@ -71,7 +71,7 @@ async function getLatestStatusData(limitCount = 1) {
 
     return latestData;
   } catch (error) {
-    console.error('Error getting documents: ', error);
+    //console.error('Error getting documents: ', error);
     throw new Error('Failed to get latest data from Firestore');
   }
 }

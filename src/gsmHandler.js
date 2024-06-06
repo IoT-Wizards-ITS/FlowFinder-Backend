@@ -14,7 +14,7 @@ async function gsmDataReceiveHandler(req, res) {
         const gsmData = {
             parsedData, time,
         }
-        await storeDataSensor(gsmId, gsmData);
+        await storeDataSensor(gsmId, historyId gsmData);
 
         //Kirim status handler ke database
         const statusMSG = 'Data from GSM module successfully received and processed';
@@ -22,7 +22,7 @@ async function gsmDataReceiveHandler(req, res) {
         const gsmStatus = {
             statusMSG, time,
         }
-        await storeDataStatus(statusId, historyId, gsmStatus);
+        await storeDataStatus(statusId, gsmStatus);
 
         //Response
         res.status(200).json({
