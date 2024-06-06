@@ -59,7 +59,7 @@ async function gsmDataSendHandler(req, res) {
             status: 'success',
             message: statusMSG,
             data: {
-                parsedData: gsmLatestData.map(item => item.parsedData)
+                parsedData: gsmLatestData
             },
         });
     } catch (error) {
