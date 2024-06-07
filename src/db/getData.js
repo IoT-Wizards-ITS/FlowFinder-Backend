@@ -67,7 +67,33 @@ async function getLatestSensorDataById(ID, limitCount) {
     return latestData;
   } catch (error) {
     //console.error('Error getting documents: ', error);
-    throw new Error('Failed to get latest data from Firestore', error);
+    throw new Error('Failed to get latest sensor data by id from Firestore', error);
+  }
+}
+
+async function getAllFloodTImeHistoryById (ID) {
+  const collectionPath = `floodtime-history/${ID}/time-intervals`;
+  const collection = db.collection(collectionPath);
+
+  try {
+    const querySnapshot = await collection
+      .orderBy('time', 'desc')      
+      .get();
+
+    if (querySnapshot.empty) {
+      return [];
+    }
+
+    const allData = [];
+    querySnapshot.forEach(doc => {
+      allData.push({
+        ...doc.data()
+      });
+    });
+
+    return allData;
+  } catch (error) {
+    throw new Error('Failed to get flood data from Firestore', error);
   }
 }
 
@@ -131,14 +157,7 @@ async function getLatestTimeDiff() {
 module.exports ={
   getLatestSensorData,
   getLatestSensorDataById,
+  getAllFloodTImeHistoryById,
   getLatestStatusData,
   getLatestTimeDiff,
 };
-
-async function main(){
-  const p = await getLatestSensorDataById("100", 2);
-  const q = p[1].parsedData.level;
-  console.log(q);
-}
-
-main();

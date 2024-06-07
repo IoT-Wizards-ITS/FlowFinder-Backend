@@ -153,10 +153,14 @@ async function calculateAndFormatTimeDifference() {
     
     const timeDifferenceMs = getTimeDifferenceInMilliseconds(time1, time2);
     const formattedTimeDifference = formatTimeDifference(timeDifferenceMs);
+
+    const sensorId = 100 + i;
     
     if( timeDifferenceMs !== 0 ) {
-      const timeFormat = getGMT7Date(2);
-      const msg = `Genangan air telah terdeteksi dari ${timeFormat} selama ${formattedTimeDifference}`;
+      const msg = `Genangan air telah terdeteksi pada sensor ${sensorId} selama ${formattedTimeDifference}`;
+      formattedDifferences.push(msg);
+    } else {
+      const msg = `Tidak terdetaksi adanya genangan air pada sensor ${sensorId}`;
       formattedDifferences.push(msg);
     }
         

@@ -1,7 +1,7 @@
 //const { handleFailure } = require("./locationHandler");
 const { storeDataSensor, storeDataStatus, storeDataZero } = require("./db/storeData");
 const crypto = require('crypto');
-const { getLatestSensorData, getLatestTimeDiff } = require("./db/getData");
+const { getLatestSensorData, getLatestTimeDiff, getAllFloodTImeHistoryById } = require("./db/getData");
 const { calculateAndFormatTimeDifference, recordFloodIntervalTime } = require("./timeCountHandler");
 const getGMT7Date = require("./timeUtils");
 
@@ -117,6 +117,39 @@ async function gsmDataDiffSendHandler(req, res) {
     }
 }
 
+async function gsmSendAllFloodHistoryDataByIdHandler (req, res) {
+    try {
+        const gsmId = req.params.id;
+        const statusMSG = `All sensor ${gsmId} flood history data successfully sent`;
+        const time = getGMT7Date(1);
+        const statusId = crypto.randomUUID();
+
+        const gsmStatus = {
+            statusMSG,
+            time,
+        }
+        await storeDataStatus(statusId, gsmStatus);
+
+        //Response
+        const latestDiffData = await getAllFloodTImeHistoryById(gsmId);
+        res.status(200).json({
+            status: 'success',
+            message: statusMSG,
+            data: {
+                latestDiffData: latestDiffData
+            },
+        });
+    } catch (error) {
+        //Kirim status handler ke database
+        //handleFailure("Failed to send data from GSM module", error);
+        res.status(502).json({
+            status: 'fail',
+            message: 'Failed to send data from GSM module',
+            error: error.message,
+        });
+    }
+}
+
 //fungsi
 function parseRawData(rawData) {
     // Convert rawData to a string to handle cases where it's a number
@@ -142,6 +175,7 @@ function parseRawData(rawData) {
 module.exports = { 
     gsmDataReceiveHandler,
     gsmDataSendHandler,
+    gsmSendAllFloodHistoryDataByIdHandler,
     parseRawData,
     gsmDataDiffSendHandler,
 };
