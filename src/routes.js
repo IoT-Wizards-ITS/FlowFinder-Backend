@@ -1,5 +1,5 @@
 const express = require('express');
-const { gsmDataReceiveHandler, gsmDataSendHandler } = require('./gsmHandler');
+const { gsmDataReceiveHandler, gsmDataSendHandler, gsmDataDiffSendHandler } = require('./gsmHandler');
 const { locationReceiveHandler, locationSendHandler, placeReceiveHandler, placeSendHandler } = require('./locationHandler');
 const statusHandler = require('./statusHandler');
 
@@ -13,6 +13,8 @@ router.get('/', (req, res) => {
 
 router.post('/gsmData', gsmDataReceiveHandler);
 router.get('/gsmData', gsmDataSendHandler);
+
+router.get('/diffData', gsmDataDiffSendHandler);
 
 router.post('/locationData', locationReceiveHandler);
 router.get('/locationData', locationSendHandler);

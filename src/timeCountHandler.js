@@ -1,15 +1,7 @@
+const { getLatestSensorDataById } = require("./db/getData");
 const db = require("./db/initializeDB");
-const { storeDataFloodTimeHistory } = require("./db/storeData");
-const { getGMT7Date } = require("./gsmHandler");
-const options = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-};
+const { storeDataTimeDiff } = require("./db/storeData");
+const getGMT7Date = require("./timeUtils");
 
 function formatTimeDifference(diffMs) {
     const totalSeconds = Math.floor(diffMs / 1000);
@@ -37,7 +29,7 @@ async function floodLastZero(sensorId) {
   try {
     const querySnapshot = await collection
       .orderBy('time', 'desc') 
-      .limit(1)       
+      .limit(2)       
       .get();
 
     if (querySnapshot.empty) {
@@ -52,13 +44,14 @@ async function floodLastZero(sensorId) {
       });
     });
 
+    console.log(latestData);
     return latestData;
   } catch (error) {
     throw new Error('Failed to get latest data from Firestore: ' + error.message);
   }
 }
 
-async function getLatestTimeData(limitCount) {
+async function getLatestTimeData() {
   const sensorsSnapshot = await db.collection('sensor-data').get();
 
   try {
@@ -70,49 +63,6 @@ async function getLatestTimeData(limitCount) {
     const latestParsedDataPromises = sensorsSnapshot.docs.map(async (sensorDoc) => {
       const sensorId = sensorDoc.id;
       const sensorHistorySnapshot = await db.collection('sensor-data')
-        .doc(sensorId)
-        .collection('sensor-history')
-        .orderBy('time', 'desc')
-        .limit(limitCount)
-        .get();
-
-      if (sensorHistorySnapshot.empty) {
-        //console.log(`No history found for sensor ${sensorId}`);
-        return null;
-      }
-
-      const latestHistoryDoc = sensorHistorySnapshot.docs[limitCount-1];
-      const latestParsedData = latestHistoryDoc.data();
-      const formattedTime = new Date(latestParsedData.time).toISOString();
-      return { time:formattedTime };
-    });
-
-    const latestParsedDataResults = await Promise.all(latestParsedDataPromises);
-    const filteredResults = latestParsedDataResults.filter(data => data !== null);
-    const response = {
-        time: filteredResults
-    };
-    
-    //console.log('Latest Parsed Data:', JSON.stringify(response, null, 2));
-    return response;
-  } catch (error) {
-    //console.error('Error retrieving latest parsed data:', error);
-    return { data: { time: [] }, error: error.message };
-  }
-}
-
-async function getLatestZero() {
-  const sensorsSnapshot = await db.collection('level-zero').get();
-
-  try {
-    if (sensorsSnapshot.empty) {
-      //console.log('No sensor documents found.');
-      return { time: [] };
-    }
-
-    const latestParsedDataPromises = sensorsSnapshot.docs.map(async (sensorDoc) => {
-      const sensorId = sensorDoc.id;
-      const sensorHistorySnapshot = await db.collection('level-zero')
         .doc(sensorId)
         .collection('sensor-history')
         .orderBy('time', 'desc')
@@ -144,46 +94,106 @@ async function getLatestZero() {
   }
 }
 
-async function calculateAndFormatTimeDifference(ID) {
-    const latestTimeData = await getLatestTimeData(1);
-    const latestZero = await getLatestZero();
+async function getLatestZero(limitCount) {
+  const sensorsSnapshot = await db.collection('level-zero').get();
 
-    if (latestTimeData.time.length === 0 || latestZero.time.length === 0) {
-        console.error('No data available to calculate time difference');
-        return;
+  try {
+    if (sensorsSnapshot.empty) {
+      //console.log('No sensor documents found.');
+      return { time: [] };
     }
 
-    const formattedDifferences = [];
-    for (let i = 0; i < Math.min(latestTimeData.time.length, latestZero.time.length); i++) {
-        const time1 = latestTimeData.time[i].time;
-        const time2 = latestZero.time[i].time;
+    const latestParsedDataPromises = sensorsSnapshot.docs.map(async (sensorDoc) => {
+      const sensorId = sensorDoc.id;
+      const sensorHistorySnapshot = await db.collection('level-zero')
+        .doc(sensorId)
+        .collection('sensor-history')
+        .orderBy('time', 'desc')
+        .limit(limitCount)
+        .get();
 
-        const timeDifferenceMs = getTimeDifferenceInMilliseconds(time1, time2);
-        const formattedTimeDifference = formatTimeDifference(timeDifferenceMs);
+      if (sensorHistorySnapshot.empty) {
+        //console.log(`No history found for sensor ${sensorId}`);
+        return null;
+      }
 
-        
-        if( timeDifferenceMs === 0 ) {
-            formattedDifferences.push('Tidak ada genangan air terdeteksi');
-            
-            const latestTimeStamp = await getLatestTimeData(2);
-            const timeStamp1 = latestTimeStamp.time[i].time;
+      const latestHistoryDoc = sensorHistorySnapshot.docs[limitCount-1];
+      const latestParsedData = latestHistoryDoc.data();
+      const formattedTime = new Date(latestParsedData.time).toISOString();
+      return { time:formattedTime };
+    });
 
-            const floodTimeMs = getTimeDifferenceInMilliseconds(timeStamp1, time2);
-            const formattedFloodTime = formatTimeDifference(floodTimeMs);
-            const time = getGMT7Date(1);
-
-            const data = {
-                formattedFloodTime, time,
-            }
-            storeDataFloodTimeHistory(ID, data);
-
-        } else {
-            const timeFormat = time1.toLocaleString('en-GB', options).replace(',', '');
-            const msg = `Genangan air telah terdeteksi dari ${timeFormat} selama ${formattedTimeDifference}`;
-            formattedDifferences.push(msg);
-        }
-    }
-    console.log('Formatted Time Differences:', formattedDifferences);
+    const latestParsedDataResults = await Promise.all(latestParsedDataPromises);
+    const filteredResults = latestParsedDataResults.filter(data => data !== null);
+    const response = {
+        time: filteredResults
+    };
+    
+    //console.log('Latest Parsed Data:', JSON.stringify(response, null, 2));
+    return response;
+  } catch (error) {
+    //console.error('Error retrieving latest parsed data:', error);
+    return { data: { time: [] }, error: error.message };
+  }
 }
 
-module.exports = calculateAndFormatTimeDifference;
+async function calculateAndFormatTimeDifference() {
+  const latestTimeData = await getLatestTimeData();
+  const latestZero = await getLatestZero(1);
+  
+  if (latestTimeData.time.length === 0 || latestZero.time.length === 0) {
+      console.error('No data available to calculate time difference');
+      return;
+  }
+  
+  const formattedDifferences = [];
+  for (let i = 0; i < Math.min(latestTimeData.time.length, latestZero.time.length); i++) {
+    const time1 = latestTimeData.time[i].time;
+    const time2 = latestZero.time[i].time;
+    
+    const timeDifferenceMs = getTimeDifferenceInMilliseconds(time1, time2);
+    const formattedTimeDifference = formatTimeDifference(timeDifferenceMs);
+    
+    if( timeDifferenceMs !== 0 ) {
+      const timeFormat = getGMT7Date(2);
+      const msg = `Genangan air telah terdeteksi dari ${timeFormat} selama ${formattedTimeDifference}`;
+      formattedDifferences.push(msg);
+    }
+        
+  }
+  const uniqueId = crypto.randomUUID();
+  const time = getGMT7Date(1);
+  const timeDiffData = { formattedDifferences, time };
+  storeDataTimeDiff(uniqueId, timeDiffData);
+}
+
+
+async function recordFloodIntervalTime(ID, level, timeNow) {
+  const secondLatestDataFromSensor = await getLatestSensorDataById(ID, 2);
+  const secondLatestLevelDataFromSensor = secondLatestDataFromSensor[1].parsedData.level;
+  try{
+    if (level == 0 && secondLatestLevelDataFromSensor != 0) {
+      const floodLastZeroTime = await floodLastZero(ID);
+      const floodSecondLastZeroTime = floodLastZeroTime[1].time
+      const intervalTime = getTimeDifferenceInMilliseconds(timeNow, floodSecondLastZeroTime);
+      const floodDuration = formatTimeDifference(intervalTime);
+      const floodedStart = floodSecondLastZeroTime;
+      const floodedEnd = timeNow;
+
+      const uniqueId = crypto.randomUUID();
+      const history = {
+        floodedStart, floodedEnd, floodDuration,
+      }
+      const floodDataCollection = db.collection('floodtime-history').doc(ID);
+      const floodDataHistory = floodDataCollection.collection('time-intervals');
+      await floodDataHistory.doc(uniqueId).set(history);
+    }
+  } catch (error) {
+    throw new Error('Failed to send data to Firestore: ' + error.message);
+  }
+} 
+
+module.exports = { 
+  calculateAndFormatTimeDifference,
+  recordFloodIntervalTime,
+};

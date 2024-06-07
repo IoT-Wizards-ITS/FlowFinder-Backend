@@ -1,4 +1,3 @@
-const { Firestore } = require('@google-cloud/firestore');
 const db = require('./initializeDB');
 
 async function getLatestSensorData() {
@@ -43,6 +42,35 @@ async function getLatestSensorData() {
   }
 }
 
+async function getLatestSensorDataById(ID, limitCount) {
+  const collectionPath = `sensor-data/${ID}/sensor-history`;
+  const collection = db.collection(collectionPath);
+  try {
+    const querySnapshot = await collection
+      .orderBy('time', 'desc') 
+      .limit(limitCount)       
+      .get();
+    
+    if (querySnapshot.empty) {
+      //console.log('No matching documents.');
+      return [];
+    }
+
+    const latestData = [];
+    querySnapshot.forEach(doc => {
+      latestData.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    return latestData;
+  } catch (error) {
+    //console.error('Error getting documents: ', error);
+    throw new Error('Failed to get latest data from Firestore', error);
+  }
+}
+
 async function getLatestStatusData(limitCount = 1) {
   const Collection = db.collection('status-data');
 
@@ -72,7 +100,45 @@ async function getLatestStatusData(limitCount = 1) {
   }
 }
 
+async function getLatestTimeDiff() {
+  const Collection = db.collection('time-diff');
+  try {
+    const querySnapshot = await Collection
+      .orderBy('time', 'desc') 
+      .limit(1)       
+      .get();
+
+    if (querySnapshot.empty) {
+      //console.log('No matching documents.');
+      return [];
+    } 
+
+    const latestData = [];
+    querySnapshot.forEach(doc => {
+      latestData.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    return latestData;
+  } catch (error) {
+    //console.error('Error getting documents: ', error);
+    throw new Error('Failed to get latest data from Firestore');
+  }
+}
+
 module.exports ={
   getLatestSensorData,
-  getLatestStatusData
+  getLatestSensorDataById,
+  getLatestStatusData,
+  getLatestTimeDiff,
 };
+
+async function main(){
+  const p = await getLatestSensorDataById("100", 2);
+  const q = p[1].parsedData.level;
+  console.log(q);
+}
+
+main();

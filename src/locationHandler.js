@@ -1,7 +1,7 @@
 const placeDataBase = require('./placeDataBase');
 const { v4: uuidv4 } = require('uuid');
-const { getGMT7Date } = require('./gsmHandler');
 const { storeDataLocation } = require('./db/storeData');
+const getGMT7Date = require('./timeUtils');
 
 async function locationReceiveHandler (req, res) {
     try {
@@ -18,7 +18,7 @@ async function locationReceiveHandler (req, res) {
 
         // Send status handler to the database
         const statusMSG = 'Location data successfully received';
-        const time = getGMT7Date();
+        const time = getGMT7Date(1);
         const statusId = crypto.randomUUID();
 
         const gsmStatus = {
@@ -41,7 +41,7 @@ async function locationSendHandler (req, res) {
     try {
         // Send status handler to the database
         const statusMSG = 'Location data successfully sent';
-        const time = getGMT7Date();
+        const time = getGMT7Date(1);
         const statusId = crypto.randomUUID();
 
         const gsmStatus = {
@@ -98,7 +98,7 @@ const placeSendHandler = (req, res) => {
     try {
         // Send status handler to the database
         const statusMSG = 'Place data successfully sent';
-        const time = getGMT7Date();
+        const time = getGMT7Date(1);
 
         const gsmStatus = {
             statusMSG, time,
@@ -119,7 +119,7 @@ const placeSendHandler = (req, res) => {
 
 const handleFailure = (statusMSG, error, res) => {
     // Send status handler to the database
-    const time = getGMT7Date();
+    const time = getGMT7Date(1);
     const statusId = crypto.randomUUID();
 
     const statusData = { statusMSG, time };

@@ -27,10 +27,16 @@ async function storeDataFloodTimeHistory(ID, data) {
   await floodTimeCollection.doc(ID).set(data);
 }
 
+async function storeDataTimeDiff(ID, data) {
+  const floodTimeCollection = db.collection('time-diff');
+  await floodTimeCollection.doc(ID).set(data);
+}
+
 module.exports = { 
   storeDataSensor,
   storeDataStatus,
   storeDataLocation,
   storeDataZero,
   storeDataFloodTimeHistory,
+  storeDataTimeDiff,
 };

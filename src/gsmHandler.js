@@ -1,14 +1,16 @@
-const { handleFailure } = require("./locationHandler");
+//const { handleFailure } = require("./locationHandler");
 const { storeDataSensor, storeDataStatus, storeDataZero } = require("./db/storeData");
 const crypto = require('crypto');
-const { getLatestSensorData } = require("./db/getData");
-const calculateAndFormatTimeDifference = require("./timeCountHandler");
+const { getLatestSensorData, getLatestTimeDiff } = require("./db/getData");
+const { calculateAndFormatTimeDifference, recordFloodIntervalTime } = require("./timeCountHandler");
+const getGMT7Date = require("./timeUtils");
 
 async function gsmDataReceiveHandler(req, res) {
     try {
         const { rawData } = req.body;
         const parsedData = parseRawData(rawData);
         const gsmId = parsedData.id.toString();
+        const gsmLevel = parsedData.level;
         const historyId = crypto.randomUUID();
         const time = getGMT7Date(1);
 
@@ -20,9 +22,10 @@ async function gsmDataReceiveHandler(req, res) {
         const timeStamp = { time };
         if(parsedData.level.toString() === "0") {
             await storeDataZero(gsmId, historyId, timeStamp);
+            await recordFloodIntervalTime(gsmId, gsmLevel, time);
         }
 
-        await calculateAndFormatTimeDifference(historyId);
+        await calculateAndFormatTimeDifference();
 
         //Kirim status handler ke database
         const statusMSG = 'Data from GSM module successfully received and processed';
@@ -39,7 +42,7 @@ async function gsmDataReceiveHandler(req, res) {
         });
     } catch (error) {
         //Kirim status handler ke database
-        handleFailure("Failed to receive data from GSM module", error);
+        //handleFailure("Failed to receive data from GSM module", error);
         res.status(500).json({
             status: 'fail',
             message: 'Failed to receive data from GSM module',
@@ -72,7 +75,7 @@ async function gsmDataSendHandler(req, res) {
         });
     } catch (error) {
         //Kirim status handler ke database
-        handleFailure("Failed to send data from GSM module", error);
+        //handleFailure("Failed to send data from GSM module", error);
         res.status(502).json({
             status: 'fail',
             message: 'Failed to send data from GSM module',
@@ -80,6 +83,39 @@ async function gsmDataSendHandler(req, res) {
         });
     }
 };
+
+async function gsmDataDiffSendHandler(req, res) {
+    try {
+        //Kirim status handler ke database
+        const statusMSG = 'Diff data successfully sent';
+        const time = getGMT7Date(1);
+        const statusId = crypto.randomUUID();
+
+        const gsmStatus = {
+            statusMSG,
+            time,
+        }
+        await storeDataStatus(statusId, gsmStatus);
+
+        //Response
+        const latestDiffData = await getLatestTimeDiff();
+        res.status(200).json({
+            status: 'success',
+            message: statusMSG,
+            data: {
+                parsedData: latestDiffData
+            },
+        });
+    } catch (error) {
+        //Kirim status handler ke database
+        //handleFailure("Failed to send data from GSM module", error);
+        res.status(502).json({
+            status: 'fail',
+            message: 'Failed to send data from GSM module',
+            error: error.message,
+        });
+    }
+}
 
 //fungsi
 function parseRawData(rawData) {
@@ -103,38 +139,9 @@ function parseRawData(rawData) {
     return result;
 }
 
-
-function getGMT7Date(opt) {
-    const date = new Date();
-    const utcOffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
-    const gmt7Offset = 7 * 60 * 60000; // GMT+7 offset in milliseconds
-    const gmt7Date = new Date(date.getTime() + utcOffset + gmt7Offset);
-    
-    const options = {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    };
-
-    const isoGmt7Date = gmt7Date.toISOString();
-    const formattedDate = gmt7Date.toLocaleString('en-GB', options).replace(',', '');
-
-    if(opt === 1) {
-        return isoGmt7Date;
-    }
-
-    if (opt === 2) {
-        return formattedDate;
-    }
-}
-
 module.exports = { 
     gsmDataReceiveHandler,
     gsmDataSendHandler,
-    getGMT7Date,
     parseRawData,
+    gsmDataDiffSendHandler,
 };
