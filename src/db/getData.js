@@ -77,7 +77,7 @@ async function getAllFloodTImeHistoryById (ID) {
 
   try {
     const querySnapshot = await collection
-      .orderBy('time', 'desc')      
+      .orderBy("floodedStart", "desc")   
       .get();
 
     if (querySnapshot.empty) {
@@ -87,6 +87,7 @@ async function getAllFloodTImeHistoryById (ID) {
     const allData = [];
     querySnapshot.forEach(doc => {
       allData.push({
+        id: doc.id,
         ...doc.data()
       });
     });
@@ -161,3 +162,4 @@ module.exports ={
   getLatestStatusData,
   getLatestTimeDiff,
 };
+
