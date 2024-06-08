@@ -71,6 +71,36 @@ async function getLatestSensorDataById(ID, limitCount) {
   }
 }
 
+async function getLatesFirstFloodDetectedAfterZero(ID) {
+  const collectionPath = `sensor-data/${ID}/first-level-detected`;
+  const collection = db.collection(collectionPath);
+
+  try {
+    const querySnapshot = await collection
+      .orderBy('time', 'desc') 
+      .limit(1)       
+      .get();
+
+    if (querySnapshot.empty) {
+      //console.log('No matching documents.');
+      return [];
+    }
+
+    const latestData = [];
+    querySnapshot.forEach(doc => {
+      latestData.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    return latestData;
+  } catch (error) {
+    //console.error('Error getting documents: ', error);
+    throw new Error('Failed to get latest sensor data by id from Firestore', error);
+  }
+}
+
 async function getAllFloodTImeHistoryById (ID) {
   const collectionPath = `floodtime-history/${ID}/time-intervals`;
   const collection = db.collection(collectionPath);
@@ -158,8 +188,8 @@ async function getLatestTimeDiff() {
 module.exports ={
   getLatestSensorData,
   getLatestSensorDataById,
+  getLatesFirstFloodDetectedAfterZero,
   getAllFloodTImeHistoryById,
   getLatestStatusData,
   getLatestTimeDiff,
 };
-

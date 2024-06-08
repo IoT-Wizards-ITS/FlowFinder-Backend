@@ -1,4 +1,4 @@
-const { getLatestSensorDataById } = require("./db/getData");
+const { getLatestSensorDataById, getLatesFirstFloodDetectedAfterZero } = require("./db/getData");
 const db = require("./db/initializeDB");
 const { storeDataTimeDiff } = require("./db/storeData");
 const getGMT7Date = require("./timeUtils");
@@ -177,11 +177,10 @@ async function recordFloodIntervalTime(ID, level, timeNow) {
   const secondLatestLevelDataFromSensor = secondLatestDataFromSensor[1].parsedData.level;
   try{
     if (level == 0 && secondLatestLevelDataFromSensor != 0) {
-      const floodLastZeroTime = await floodLastZero(ID);
-      const floodSecondLastZeroTime = floodLastZeroTime[1].time
-      const intervalTime = getTimeDifferenceInMilliseconds(timeNow, floodSecondLastZeroTime);
+      const floodFirstLevelZero = await getLatesFirstFloodDetectedAfterZero(ID);
+      const intervalTime = getTimeDifferenceInMilliseconds(timeNow, floodFirstLevelZero[0].time);
       const floodDuration = formatTimeDifference(intervalTime);
-      const floodedStart = floodSecondLastZeroTime;
+      const floodedStart = floodFirstLevelZero[0].time;
       const floodedEnd = timeNow;
 
       const uniqueId = crypto.randomUUID();

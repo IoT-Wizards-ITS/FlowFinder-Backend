@@ -22,6 +22,12 @@ async function storeDataZero(gsmId, historyId, data) {
   await sensorDataHistory.doc(historyId).set(data);
 }
 
+async function storeDataFirstLevelAfterZero(gsmId, historyId, data) {
+  const sensorDataCollection = db.collection('sensor-data').doc(gsmId);
+  const sensorDataHistory = sensorDataCollection.collection('first-level-detected');
+  await sensorDataHistory.doc(historyId).set(data);
+}
+
 async function storeDataFloodTimeHistory(ID, data) {
   const floodTimeCollection = db.collection('floodtime-history');
   await floodTimeCollection.doc(ID).set(data);
@@ -37,6 +43,7 @@ module.exports = {
   storeDataStatus,
   storeDataLocation,
   storeDataZero,
+  storeDataFirstLevelAfterZero,
   storeDataFloodTimeHistory,
   storeDataTimeDiff,
 };

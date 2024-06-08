@@ -1,7 +1,7 @@
 //const { handleFailure } = require("./locationHandler");
-const { storeDataSensor, storeDataStatus, storeDataZero } = require("./db/storeData");
+const { storeDataSensor, storeDataStatus, storeDataZero, storeDataFirstLevelAfterZero } = require("./db/storeData");
 const crypto = require('crypto');
-const { getLatestSensorData, getLatestTimeDiff, getAllFloodTImeHistoryById } = require("./db/getData");
+const { getLatestSensorData, getLatestTimeDiff, getAllFloodTImeHistoryById, getLatestSensorDataById } = require("./db/getData");
 const { calculateAndFormatTimeDifference, recordFloodIntervalTime } = require("./timeCountHandler");
 const getGMT7Date = require("./timeUtils");
 
@@ -14,6 +14,16 @@ async function gsmDataReceiveHandler(req, res) {
         const historyId = crypto.randomUUID();
         const time = getGMT7Date(1);
 
+        const isLevelZeroPreviously = await getLatestSensorDataById(gsmId, 1);
+
+        if(isLevelZeroPreviously[0].parsedData.level === 0 && gsmLevel > 0) {
+            const firstLevelFloodDetected = true;
+            const gsmData = {
+                parsedData, time, firstLevelFloodDetected,
+            }
+            await storeDataFirstLevelAfterZero(gsmId, historyId, gsmData);
+        }
+        
         const gsmData = {
             parsedData, time,
         }
