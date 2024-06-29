@@ -168,7 +168,7 @@ async function calculateAndFormatTimeDifference() {
   const uniqueId = crypto.randomUUID();
   const time = getGMT7Date(1);
   const timeDiffData = { formattedDifferences, time };
-  storeDataTimeDiff(uniqueId, timeDiffData);
+  await storeDataTimeDiff(uniqueId, timeDiffData);
 }
 
 

@@ -9,6 +9,7 @@ async function gsmDataReceiveHandler(req, res) {
     try {
         const { rawData } = req.body;
         const parsedData = parseRawData(rawData);
+        console.log(parsedData);
         const gsmId = parsedData.id.toString();
         const gsmLevel = parsedData.level;
         const historyId = crypto.randomUUID();
@@ -53,6 +54,7 @@ async function gsmDataReceiveHandler(req, res) {
     } catch (error) {
         //Kirim status handler ke database
         //handleFailure("Failed to receive data from GSM module", error);
+        console.error(error);
         res.status(500).json({
             status: 'fail',
             message: 'Failed to receive data from GSM module',
