@@ -11,11 +11,6 @@ async function storeDataStatus(id, data) {
   await sensorDataCollection.doc(id).set(data);
 }
 
-async function storeDataLocation(id, data) {
-  const sensorDataCollection = db.collection('location-data');
-  await sensorDataCollection.doc(id).set(data);
-}
-
 async function storeDataZero(gsmId, historyId, data) {
   const sensorDataCollection = db.collection('level-zero').doc(gsmId);
   const sensorDataHistory = sensorDataCollection.collection('sensor-history');
@@ -41,7 +36,6 @@ async function storeDataTimeDiff(ID, data) {
 module.exports = { 
   storeDataSensor,
   storeDataStatus,
-  storeDataLocation,
   storeDataZero,
   storeDataFirstLevelAfterZero,
   storeDataFloodTimeHistory,

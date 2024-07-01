@@ -1,3 +1,4 @@
+// bikin waktu make GMT +7
 function getGMT7Date(opt) {
     const date = new Date();
     const utcOffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds

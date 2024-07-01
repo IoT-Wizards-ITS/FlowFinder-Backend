@@ -1,8 +1,9 @@
-const { getLatestSensorDataById, getLatesFirstFloodDetectedAfterZero } = require("./db/getData");
 const db = require("./db/initializeDB");
+const { getLatestSensorDataById, getLatesFirstFloodDetectedAfterZero } = require("./db/getData");
 const { storeDataTimeDiff } = require("./db/storeData");
 const getGMT7Date = require("./timeUtils");
 
+// Konversi milisecond ke format hour:minute:second
 function formatTimeDifference(diffMs) {
     const totalSeconds = Math.floor(diffMs / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -16,41 +17,14 @@ function formatTimeDifference(diffMs) {
     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 }
 
+// Hitung perbedaan waktu
 function getTimeDifferenceInMilliseconds(time1, time2) {
     const timestamp1 = new Date(time1).getTime();
     const timestamp2 = new Date(time2).getTime();
     return Math.abs(timestamp1 - timestamp2);
 }
 
-async function floodLastZero(sensorId) {
-  const collectionPath = `level-zero/${sensorId}/sensor-history`;
-  const collection = db.collection(collectionPath);
-
-  try {
-    const querySnapshot = await collection
-      .orderBy('time', 'desc') 
-      .limit(2)       
-      .get();
-
-    if (querySnapshot.empty) {
-      return [];
-    } 
-
-    const latestData = [];
-    querySnapshot.forEach(doc => {
-      latestData.push({
-        time: doc.data().time,
-        ...doc.data()
-      });
-    });
-
-    console.log(latestData);
-    return latestData;
-  } catch (error) {
-    throw new Error('Failed to get latest data from Firestore: ' + error.message);
-  }
-}
-
+// Ambil waktu terbaru dari level pada tiap ID yang ada
 async function getLatestTimeData() {
   const sensorsSnapshot = await db.collection('sensor-data').get();
 
@@ -94,6 +68,7 @@ async function getLatestTimeData() {
   }
 }
 
+// Ambil waktu terbaru dari level 0 pada tiap ID yang ada
 async function getLatestZero(limitCount) {
   const sensorsSnapshot = await db.collection('level-zero').get();
 
@@ -137,6 +112,7 @@ async function getLatestZero(limitCount) {
   }
 }
 
+// Fungsi yang menampilkan status terkini dari tiap ID (menampilkan lama waktu genangan)
 async function calculateAndFormatTimeDifference() {
   const latestTimeData = await getLatestTimeData();
   const latestZero = await getLatestZero(1);
@@ -171,7 +147,7 @@ async function calculateAndFormatTimeDifference() {
   await storeDataTimeDiff(uniqueId, timeDiffData);
 }
 
-
+// Hitung lama waktu banjir yang terlampau
 async function recordFloodIntervalTime(ID, level, timeNow) {
   const secondLatestDataFromSensor = await getLatestSensorDataById(ID, 2);
   const secondLatestLevelDataFromSensor = secondLatestDataFromSensor[1].parsedData.level;

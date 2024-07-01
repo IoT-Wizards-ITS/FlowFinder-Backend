@@ -1,6 +1,5 @@
 const express = require('express');
 const { gsmDataReceiveHandler, gsmDataSendHandler, gsmDataDiffSendHandler, gsmSendAllFloodHistoryDataByIdHandler } = require('./gsmHandler');
-const { locationReceiveHandler, locationSendHandler, placeReceiveHandler, placeSendHandler } = require('./locationHandler');
 const statusHandler = require('./statusHandler');
 
 const router = express.Router();
@@ -17,12 +16,6 @@ router.get('/gsmData', gsmDataSendHandler);
 router.get('/floodHistory/:id', gsmSendAllFloodHistoryDataByIdHandler);
 
 router.get('/diffData', gsmDataDiffSendHandler);
-
-router.post('/locationData', locationReceiveHandler);
-router.get('/locationData', locationSendHandler);
-
-router.post('/placeData', placeReceiveHandler);
-router.get('/placeData', placeSendHandler);
 
 router.get('/statusData', statusHandler);
 

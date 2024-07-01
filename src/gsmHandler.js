@@ -1,4 +1,3 @@
-//const { handleFailure } = require("./locationHandler");
 const { storeDataSensor, storeDataStatus, storeDataZero, storeDataFirstLevelAfterZero } = require("./db/storeData");
 const crypto = require('crypto');
 const { getLatestSensorData, getLatestTimeDiff, getAllFloodTImeHistoryById, getLatestSensorDataById } = require("./db/getData");
@@ -53,7 +52,6 @@ async function gsmDataReceiveHandler(req, res) {
         });
     } catch (error) {
         //Kirim status handler ke database
-        //handleFailure("Failed to receive data from GSM module", error);
         console.error(error);
         res.status(500).json({
             status: 'fail',
@@ -87,7 +85,6 @@ async function gsmDataSendHandler(req, res) {
         });
     } catch (error) {
         //Kirim status handler ke database
-        //handleFailure("Failed to send data from GSM module", error);
         res.status(502).json({
             status: 'fail',
             message: 'Failed to send data from GSM module',
@@ -120,7 +117,6 @@ async function gsmDataDiffSendHandler(req, res) {
         });
     } catch (error) {
         //Kirim status handler ke database
-        //handleFailure("Failed to send data from GSM module", error);
         res.status(502).json({
             status: 'fail',
             message: 'Failed to send data from GSM module',
@@ -153,7 +149,6 @@ async function gsmSendAllFloodHistoryDataByIdHandler (req, res) {
         });
     } catch (error) {
         //Kirim status handler ke database
-        //handleFailure("Failed to send data from GSM module", error);
         res.status(502).json({
             status: 'fail',
             message: 'Failed to send data from GSM module',
